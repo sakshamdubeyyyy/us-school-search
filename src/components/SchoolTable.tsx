@@ -36,7 +36,7 @@ const SchoolTable: React.FC<Props> = ({ schools }) => {
         {/* Table header with column names */}
         <Thead bg="blue.500">
           <Tr>
-            {["Name", "Street", "City", "State", "ZIP"].map((header) => (
+            {["Name", "Street", "District", "State", "ZIP"].map((header) => (
               <Th
                 key={header}
                 color="white"
