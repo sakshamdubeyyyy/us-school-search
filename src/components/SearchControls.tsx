@@ -9,12 +9,12 @@ import {
 } from "@utils/nces";
 
 interface Props {
-  selectedCity: string; 
-  onReset: () => void; 
-  onCitySelect: (city: string) => void; 
-  onSchoolSelect: (school: NCESSchoolFeatureAttributes) => void; 
-  citySearchRef: React.RefObject<SearchDropdownRef>; 
-  schoolSearchRef: React.RefObject<SearchDropdownRef>; 
+  selectedCity: string;
+  onReset: () => void;
+  onCitySelect: (city: string) => void;
+  onSchoolSelect: (school: NCESSchoolFeatureAttributes) => void;
+  citySearchRef: React.RefObject<SearchDropdownRef>;
+  schoolSearchRef: React.RefObject<SearchDropdownRef>;
 }
 
 const SearchControls: React.FC<Props> = ({
@@ -25,6 +25,30 @@ const SearchControls: React.FC<Props> = ({
   citySearchRef,
   schoolSearchRef,
 }) => {
+  const searchAllCities = async (
+    query: string
+  ): Promise<{ LCITY: string }[]> => {
+    const [districts, schools] = await Promise.all([
+      searchSchoolDistricts(query),
+      searchSchools(query),
+    ]);
+
+    const districtCities = districts
+      .map((d) => d.LCITY?.trim())
+      .filter(Boolean);
+
+    const schoolCities = schools
+      .map((s: NCESSchoolFeatureAttributes) => s.CITY?.trim())
+      .filter(Boolean);
+
+    const allCities = [...districtCities, ...schoolCities];
+
+    // Deduplicate city names
+    const uniqueCities = [...new Set(allCities)];
+
+    return uniqueCities.map((city) => ({ LCITY: city! }));
+  };
+
   return (
     <>
       {/* Reset button shown only when a city is selected */}
@@ -59,14 +83,14 @@ const SearchControls: React.FC<Props> = ({
         >
           <SearchDropdown
             ref={citySearchRef}
-            placeholder="Search by district name..."
-            searchFunction={searchSchoolDistricts} 
-            onSelect={(item) => onCitySelect(item.LCITY!)} 
-            getUniqueKey={(item) => item.LCITY!} 
-            renderItem={(item) => <Text>{item.LCITY}</Text>} 
+            placeholder="Search by district or school city..."
+            searchFunction={searchAllCities}
+            onSelect={(item) => onCitySelect(item.LCITY!)}
+            getUniqueKey={(item) => item.LCITY!}
+            renderItem={(item) => <Text>{item.LCITY}</Text>}
             deduplicate={(items) => [
               ...new Map(items.map((i) => [i.LCITY?.trim(), i])).values(),
-            ]} 
+            ]}
           />
         </Box>
 
@@ -82,14 +106,14 @@ const SearchControls: React.FC<Props> = ({
           <SearchDropdown
             ref={schoolSearchRef}
             placeholder="Search by school name..."
-            searchFunction={searchSchools} 
-            onSelect={onSchoolSelect} 
-            getUniqueKey={(school) => `${school.NAME}-${school.CITY}`} 
+            searchFunction={searchSchools}
+            onSelect={onSchoolSelect}
+            getUniqueKey={(school) => `${school.NAME}-${school.CITY}`}
             renderItem={(school) => (
               <Text>
                 {school.NAME} — {school.CITY}, {school.STATE}
               </Text>
-            )} 
+            )}
             deduplicate={(schools) => {
               // Deduplication logic using Set for school name + city
               const seen = new Set();
