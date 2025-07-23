@@ -83,7 +83,7 @@ const SearchControls: React.FC<Props> = ({
         >
           <SearchDropdown
             ref={citySearchRef}
-            placeholder="Search by district or school city..."
+            placeholder="Search by district..."
             searchFunction={searchAllCities}
             onSelect={(item) => onCitySelect(item.LCITY!)}
             getUniqueKey={(item) => item.LCITY!}
